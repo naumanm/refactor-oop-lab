@@ -1,3 +1,5 @@
+# michael_nauman
+
 require 'pry'
 require 'sinatra'
 require 'better_errors'
@@ -67,7 +69,7 @@ end
 # STUDENT ROUTES
 
 get '/squads/:squad_id/students' do
-  @students = Squad.find(params[:squad_id].to_i).students
+  @students = Student.all
   erb :'students/index'
 end
 
@@ -76,35 +78,38 @@ get '/squads/:squad_id/students/new' do
   erb :'students/add'
 end
 
+# displays one student
 get '/squads/:squad_id/students/:student_id' do
-  squad_id = params[:squad_id].to_i
-  id = params[:student_id].to_i
-  student = @conn.exec('SELECT * FROM students WHERE id = $1 AND squad_id = $2', [ id, squad_id ] )
+  student = @conn.exec('SELECT * FROM students WHERE id = $1 AND squad_id = $2', [ params[:student_id].to_i, params[:squad_id].to_i ] )
   @student = student[0]
   erb :'students/show'
 end
 
 get '/squads/:squad_id/students/:student_id/edit' do
-  squad_id = params[:squad_id].to_i
-  id = params[:student_id].to_i
-  student = @conn.exec('SELECT * FROM students WHERE id = $1 AND squad_id = $2', [ id, squad_id ] )
+  student = @conn.exec('SELECT * FROM students WHERE id = $1 AND squad_id = $2', [ params[:student_id].to_i, params[:squad_id].to_i ] )
   @student = student[0]
   erb :'students/edit'
 end
 
 post '/squads/:squad_id/students' do
-  @conn.exec('INSERT INTO students (name, age, spirit_animal, squad_id) values ($1,$2,$3,$4)', [ params[:name]  ,params[:age],params[:spirit], params[:squad_id]])
+  Student.create params
   redirect "/squads/#{params[:squad_id].to_i}"
 end
 
 put '/squads/:squad_id/students/:student_id' do
-  id = params[:student_id].to_i
-  @conn.exec('UPDATE students SET name=$1, age=$2, spirit_animal=$3 WHERE id = $4', [ params[:name], params[:age], params[:spirit], id ] )
+  @conn.exec('UPDATE students SET name=$1, age=$2, spirit_animal=$3 WHERE id = $4', [ params[:name], params[:age], params[:spirit], params[:student_id].to_i ] )
   redirect "/squads/#{params[:squad_id].to_i}"
 end
 
+#squad delete
+# delete '/squads/:id' do
+#   Squad.find(params[:id].to_i).destroy
+#   redirect '/squads'
+# end
+
+#student delete
 delete '/squads/:squad_id/students/:student_id' do
-  id = params[:student_id].to_i
-  @conn.exec('DELETE FROM students WHERE id = ($1)', [ id ] )
+  Student.find(params[:id].to_i).destroy
+  # @conn.exec('DELETE FROM students WHERE id = ($1)', [ params[:student_id].to_i ] )
   redirect "/squads/#{params[:squad_id].to_i}"
 end
